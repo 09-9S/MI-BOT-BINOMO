@@ -1,127 +1,100 @@
 import streamlit as st
-import time
 import random
 from datetime import datetime
 import pytz
 
-# --- 1. CONFIGURACIÓN ---
-st.set_page_config(page_title="INFINITY PROFIT V76", layout="wide")
+# --- 1. CONFIGURACIÓN (SIN LIBRERÍAS QUE DEN ERROR) ---
+st.set_page_config(page_title="INFINITY PROFIT V80", layout="wide")
 local_tz = pytz.timezone('America/Bogota')
 
-# --- 2. ESTILO CSS (TU DISEÑO ORIGINAL) ---
+# --- 2. ESTILO CSS (CORREGIDO Y SIN ERRORES DE COMILLAS) ---
 st.markdown("""
     <style>
     .stApp {background-color: #050505; color: white;}
-    .reloj-box {
-        background: linear-gradient(180deg, #111, #000);
-        border: 2px solid #ffd700;
-        border-radius: 20px;
-        padding: 15px;
-        text-align: center;
-        margin-bottom: 25px;
-    }
-    .reloj-h { font-size: 50px; color: #ffd700; font-weight: 800; margin: 0; font-family: monospace; }
     .stButton > button { width: 100%; border-radius: 12px; font-weight: bold; height: 50px; border: none; }
     .btn-win button { background: #1b5e20 !important; color: white !important; }
     .btn-loss button { background: #b71c1c !important; color: white !important; }
-    .signal-card { border-radius: 20px; padding: 25px; text-align: center; border: 2px solid white; }
+    .signal-card { border-radius: 20px; padding: 25px; text-align: center; border: 2px solid white; margin-top: 10px; }
     .futuro-card { background: #111; border-left: 5px solid #ffd700; border-radius: 10px; padding: 15px; margin-top: 15px; }
+    .stop-alert { background: #4a0000; color: #ff0000; padding: 30px; border-radius: 15px; text-align: center; border: 3px solid red; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. MEMORIA DE SESIÓN ---
+# --- 3. MEMORIA DE SESIÓN (RIESGO Y MARTINGALE) ---
 if 'win' not in st.session_state: st.session_state.win = 0
-if 'loss' not in st.session_state: st.session_state.loss = 0
-if 'mostrar_señal' not in st.session_state: st.session_state.mostrar_señal = False
+if 'intentos_fallidos' not in st.session_state: st.session_state.intentos_fallidos = 0
+if 'signal_data' not in st.session_state: st.session_state.signal_data = None
 
-# --- 4. BARRA LATERAL ---
+# --- 4. CONTROL DE RIESGO (PARADA EN 4 ENTRADAS PERDIDAS) ---
+# Se activa si el total de fallos acumulados llega a 4.
+if st.session_state.intentos_fallidos >= 4:
+    st.markdown("""
+        <div class="stop-alert">
+            <h1>⛔ STOP LOSS ALCANZADO</h1>
+            <p style="font-size:20px;">Se han acumulado 4 pérdidas totales. El sistema se ha cerrado para proteger tu capital.</p>
+            <p>Reinicia el programa desde la barra lateral para volver a empezar.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    with st.sidebar:
+        if st.button("🔄 REINICIAR TODO"):
+            st.session_state.win = 0
+            st.session_state.intentos_fallidos = 0
+            st.session_state.signal_data = None
+            st.rerun()
+    st.stop()
+
+# --- 5. BARRA LATERAL (REGISTRO) ---
 with st.sidebar:
-    st.markdown("<h2 style='color:#ffd700; text-align:center;'>📊 REGISTRO</h2>", unsafe_allow_html=True)
-    st.success(f"WIN: {st.session_state.win}")
-    st.error(f"LOSS: {st.session_state.loss}")
+    st.markdown("<h2 style='color:#ffd700; text-align:center;'>📊 GESTIÓN REAL</h2>", unsafe_allow_html=True)
+    st.success(f"GANADAS: {st.session_state.win}")
+    st.error(f"PÉRDIDAS: {st.session_state.intentos_fallidos} / 4")
     st.divider()
-    if st.button("🔄 REINICIAR TODO"):
+    if st.button("🔄 REINICIAR SESIÓN"):
         st.session_state.win = 0
-        st.session_state.loss = 0
-        st.session_state.mostrar_señal = False
+        st.session_state.intentos_fallidos = 0
+        st.session_state.signal_data = None
         st.rerun()
 
-# --- 5. RELOJ CON MOVIMIENTO (HTML/JS - NO FALLA) ---
+# --- 6. RELOJ EN TIEMPO REAL (ARREGLADO PARA NO DAR ERROR) ---
 st.components.v1.html(f"""
-    <div style="background: linear-gradient(180deg, #111, #000); border: 2px solid #ffd700; border-radius: 20px; padding: 15px; text-align: center; font-family: sans-serif;">
-        <p style="color:#888; margin:0; font-size:14px;">{datetime.now(local_tz).strftime('%d . %m . %Y')}</p>
-        <p id="reloj_pro" style="font-size: 50px; color: #ffd700; font-weight: 800; margin: 0; font-family: monospace;">00:00:00</p>
+    <div style="background: linear-gradient(180deg, #111, #000); border: 2px solid #ffd700; border-radius: 20px; padding: 15px; text-align: center;">
+        <p style="color:#888; margin:0; font-size:14px; font-family: sans-serif;">{datetime.now(local_tz).strftime('%d . %m . %Y')}</p>
+        <p id="live_clock" style="font-size: 55px; color: #ffd700; font-weight: 800; margin: 0; font-family: monospace;">00:00:00</p>
     </div>
     <script>
-        function actualizarReloj() {{
-            const ahora = new Date();
-            const opciones = {{ timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }};
-            const horaTexto = ahora.toLocaleTimeString('es-CO', opciones);
-            document.getElementById('reloj_pro').innerHTML = horaTexto;
+        function runClock() {{
+            const now = new Date();
+            const time = now.toLocaleTimeString('es-CO', {{ timeZone: 'America/Bogota', hour12: false }});
+            document.getElementById('live_clock').innerHTML = time;
         }}
-        setInterval(actualizarReloj, 1000);
-        actualizarReloj();
+        setInterval(runClock, 1000); runClock();
     </script>
 """, height=140)
 
-# --- 6. PANEL DE TRABAJO ---
-col_izq, col_der = st.columns([1, 1.2])
+# --- 7. PANEL DE OPERACIÓN ---
+col1, col2 = st.columns([1, 1.2])
 
-with col_izq:
+with col1:
     st.markdown("### 📸 ESCÁNER")
-    foto = st.camera_input("Scanner")
+    foto = st.camera_input("Capturar Gráfica")
     
     st.write("")
-    st.markdown("### ⚡ REGISTRO")
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("WIN ✅"): st.session_state.win += 1
-    with c2:
-        if st.button("LOSS ❌"): st.session_state.loss += 1
+    st.markdown("### ⚡ REGISTRO DE MARTINGALE")
+    c_w, c_l = st.columns(2)
+    with c_w:
+        if st.button("WIN ✅"): 
+            st.session_state.win += 1
+    with c_l:
+        if st.button("LOSS ❌"): 
+            st.session_state.intentos_fallidos += 1
 
-with col_der:
-    st.markdown("### 🎯 ANÁLISIS")
+with col2:
+    st.markdown("### 🎯 RESULTADO DEL ANÁLISIS")
+    
     if foto or st.button("🚀 ANALIZAR AHORA"):
-        st.session_state.mostrar_señal = True
-        
-    if st.session_state.mostrar_señal:
-        # Efectividad real 70-90% solicitada
-        prob = random.uniform(72.5, 89.9)
+        # Datos solicitados: Hora de entrada, Efectividad 70-90% y Tipo
+        prob = random.uniform(72.5, 90.8)
         tipo = random.choice(["COMPRA ⬆️", "VENTA ⬇️"])
-        color = "#1b5e20" if "COMPRA" in tipo else "#b71c1c"
-        precio = random.uniform(1.0820, 1.0850)
-        
-        st.markdown(f"""
-            <div class="signal-card" style="background: {color};">
-                <p style="margin:0; opacity:0.8;">SEÑAL DETECTADA</p>
-                <h1 style="font-size: 50px; margin:10px 0;">{tipo}</h1>
-                <h2 style="color: #ffd700; margin:0;">{prob:.1f}% PRECISIÓN REAL</h2>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown(f"""
-            <div class="futuro-card">
-                <h4 style="color:#ffd700; margin:0;">⏳ OPERACIÓN A FUTURO</h4>
-                <p style="margin:5px 0;">Punto de entrada: <b>{precio:.5f}</b></p>
-                <div style="display:flex; justify-content:space-between; font-size:13px;">
-                    <span style="color:#00ff00;">TP: {(precio + 0.0035):.5f}</span>
-                    <span style="color:#ff4b4b;">SL: {(precio - 0.0015):.5f}</span>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# --- 7. GRÁFICA Y ACTIVOS ---
-st.divider()
-dict_m = {
-    "EUR/USD": "FX:EURUSD", "GBP/USD": "FX:GBPUSD", "USD/JPY": "FX:USDJPY",
-    "BITCOIN": "BINANCE:BTCUSDT", "ORO": "OANDA:XAUUSD", "NASDAQ 100": "FOREXCOM:NAS100"
-}
-selec = st.selectbox("Cambiar Activo:", list(dict_m.keys()))
-
-st.components.v1.html(f"""
-    <div id="tv_v76" style="height:480px; border-radius:15px; overflow:hidden; border: 1px solid #333;"></div>
-    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-    <script type="text/javascript">
-    new TradingView.widget({{"width":"100%","height":480,"symbol":"{dict_m[selec]}","interval":"1","theme":"dark","locale":"es","container_id":"tv_v76"}});
-    </script>
-""", height=480)
+        precio = random.uniform(1.0820, 1.0860)
+        hora = datetime.now(local_tz).strftime('%H:%M:%S')
+        st.session_state.signal_data
