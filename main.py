@@ -4,12 +4,11 @@ import random
 from datetime import datetime, timedelta
 import pytz
 
-# Configuración V32 - Gráfica Extendida y Operativa Inferior
-st.set_page_config(page_title="Elite Bot V32 - Wide View", layout="wide")
+# Configuración V33 - Nombre Personalizable
+st.set_page_config(page_title="Elite Bot V33", layout="wide")
 local_tz = pytz.timezone('America/Bogota')
 
-# --- INICIALIZACIÓN DE MEMORIA ---
-if 'historial_lista' not in st.session_state: st.session_state.historial_lista = []
+# --- MEMORIA DEL SISTEMA ---
 if 'contador' not in st.session_state: st.session_state.contador = {"Wins": 0, "Loss": 0}
 if 'bloqueado' not in st.session_state: st.session_state.bloqueado = False
 if 'ultima_senal' not in st.session_state: st.session_state.ultima_senal = None
@@ -17,84 +16,79 @@ if 'ultima_senal' not in st.session_state: st.session_state.ultima_senal = None
 def play_sound():
     st.components.v1.html('<audio autoplay><source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg"></audio>', height=0)
 
-# --- CABECERA ---
+# --- CABECERA PERSONALIZABLE ---
+# CAMBIA "ELITE SYSTEM V33" POR EL NOMBRE QUE QUIERAS ABAJO
+nombre_bot = "ELITE SYSTEM V33" 
+
 ahora = datetime.now(local_tz)
 st.markdown(f"""
-    <div style="background: #000; padding: 10px; border-radius: 10px; border-bottom: 3px solid #00e5ff; text-align: center; margin-bottom: 10px;">
-        <h2 style="color: white; margin:0; font-size: 20px;">ELITE V32 - VISTA PANORÁMICA PROFESIONAL</h2>
-        <h1 style="color: #00ff00; margin:0; font-family: monospace;">{ahora.strftime('%H:%M:%S')}</h1>
+    <div style="background: linear-gradient(90deg, #000, #1a237e, #000); padding: 10px; border-radius: 15px; border: 2px solid #00e5ff; text-align: center; margin-bottom: 20px;">
+        <h1 style="color: white; margin:0; font-size: 24px;">{nombre_bot}</h1>
+        <h2 style="color: #00ff00; margin:0; font-family: monospace;">{ahora.strftime('%H:%M:%S')}</h2>
     </div>
     """, unsafe_allow_html=True)
 
-# --- PANEL LATERAL (GALE Y FUTURO) ---
+# --- PANEL LATERAL ---
 with st.sidebar:
-    st.header("🧮 Gestión Gale")
-    inv = st.number_input("Inversión ($):", value=10.0)
-    st.caption(f"G1: ${inv*2.2:.2f} | G2: ${inv*4.8:.2f}")
-    st.divider()
-    st.header("🔮 Próximas Entradas")
-    if st.button("📅 GENERAR"):
+    st.header("🔮 Señales Futuras")
+    if st.button("📅 GENERAR ALERTA"):
         play_sound()
-        for i in range(2):
-            st.info(f"⏰ {(ahora + timedelta(minutes=random.randint(5,30))).strftime('%H:%M')} | COMPRA")
+        st.info(f"⏰ {(ahora + timedelta(minutes=15)).strftime('%H:%M')} | COMPRA")
+    st.divider()
+    st.header("🧮 Martingala")
+    inv = st.number_input("Inversión:", value=10.0)
+    st.write(f"G1: ${inv*2.2:.2f}")
 
-# --- SECCIÓN 1: ESCÁNER VISUAL (CENTRO) ---
-with st.expander("📸 ESCÁNER DE VISIÓN IA (ABRIR PARA ANALIZAR FOTO)", expanded=False):
-    col_c, col_s = st.columns([1, 1])
-    with col_c:
-        foto = st.camera_input("Captura")
-    with col_s:
-        if foto:
-            play_sound()
-            st.markdown(f'<div style="background:#1b5e20; padding:20px; border-radius:15px; color:white; border:2px solid white; text-align:center;"><h2>ANÁLISIS IA: SUBE ⬆️</h2><h1>98.7%</h1></div>', unsafe_allow_html=True)
-
-st.divider()
-
-# --- SECCIÓN 2: GRÁFICA ANCHA (VISTA TOTAL) ---
-st.subheader("📈 Gráfica de Referencia Full Width")
-mercado = st.selectbox("Seleccionar Activo:", ["OANDA:EURUSD", "FXCM:EURUSD", "BITSTAMP:BTCUSD"])
+# --- SECCIÓN 1: GRÁFICA GIGANTE ---
+st.subheader("📈 Análisis de Mercado en Tiempo Real")
+mercado = st.selectbox("Activo:", ["OANDA:EURUSD", "FXCM:EURUSD", "BITSTAMP:BTCUSD"])
 st.components.v1.html(f"""
-    <div id="tv_panoramic" style="height:500px;"></div>
+    <div id="tv_wide" style="height:550px;"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script type="text/javascript">
-    new TradingView.widget({{"width": "100%", "height": 500, "symbol": "{mercado}", "interval": "1", "theme": "dark", "container_id": "tv_panoramic", "style": "1", "locale": "es", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "hide_side_toolbar": false, "allow_symbol_change": true}});
+    new TradingView.widget({{"width": "100%", "height": 550, "symbol": "{mercado}", "interval": "1", "theme": "dark", "container_id": "tv_wide", "locale": "es"}});
     </script>
-""", height=500)
+""", height=550)
 
-# --- SECCIÓN 3: OPERATIVA DIRECTA (ABAJO DE LA GRÁFICA) ---
-st.markdown("---")
-st.subheader("🎯 Panel de Operativa Directa")
-col_bot, col_status, col_hist = st.columns([1, 1, 1])
-
-with col_bot:
-    if not st.session_state.bloqueado:
-        if st.button("🚀 ANALIZAR AHORA", use_container_width=True):
+# --- SECCIÓN 2: ESCÁNER VISUAL (CUADRITO SPEECH) ---
+st.divider()
+with st.expander("📸 ABRIR ESCÁNER VISUAL", expanded=False):
+    c1, c2 = st.columns(2)
+    with c1:
+        foto = st.camera_input("Foto")
+    with c2:
+        if foto:
             play_sound()
-            with st.spinner("Sincronizando..."):
-                time.sleep(1.5)
-                if random.random() < 0.15:
-                    st.session_state.ultima_senal = {"res": "⚠️ NO OPERAR", "clr": "#ff4b4b"}
-                else:
-                    st.session_state.ultima_senal = {"res": "VENTA ⬇️ | 97.4%", "clr": "#c62828"}
+            st.markdown(f"""
+                <div style="background:#1b5e20; padding:20px; border-radius:15px; color:white; border:2px solid white; position:relative;">
+                    <h3>IA DICE: COMPRA ⬆️</h3>
+                    <h1>98.9% PRECISION</h1>
+                    <div style="position:absolute; left:-15px; top:40%; width:0; height:0; border-top:15px solid transparent; border-bottom:15px solid transparent; border-right:15px solid #1b5e20;"></div>
+                </div>
+            """, unsafe_allow_html=True)
 
-with col_status:
+# --- SECCIÓN 3: OPERATIVA DIRECTA ---
+st.subheader("🎯 Panel de Ejecución")
+col_analisis, col_botones = st.columns([1, 1])
+
+with col_analisis:
+    if not st.session_state.bloqueado:
+        if st.button("🚀 ANALIZAR VELA ACTUAL", use_container_width=True):
+            play_sound()
+            res = random.choice(["COMPRA ⬆️ | 97%", "VENTA ⬇️ | 97%", "⚠️ NO OPERAR"])
+            st.session_state.ultima_senal = res
+    
     if st.session_state.ultima_senal:
-        s = st.session_state.ultima_senal
-        st.markdown(f'<div style="background:{s["clr"]}; padding:10px; border-radius:10px; text-align:center; color:white; font-weight:bold;">{s["res"]}</div>', unsafe_allow_html=True)
+        color = "#2e7d32" if "COMPRA" in st.session_state.ultima_senal else "#c62828"
+        if "NO OPERAR" in st.session_state.ultima_senal: color = "#616161"
+        st.markdown(f'<div style="background:{color}; padding:15px; border-radius:10px; text-align:center; color:white; font-size:20px; font-weight:bold;">{st.session_state.ultima_senal}</div>', unsafe_allow_html=True)
 
-with col_hist:
+with col_botones:
     cw, cl = st.columns(2)
     if cw.button("✅ WIN", use_container_width=True):
         st.session_state.contador["Wins"] += 1
-        st.session_state.historial_lista.insert(0, {"H": ahora.strftime("%H:%M"), "R": "WIN ✅"})
         st.balloons(); st.rerun()
     if cl.button("❌ LOSS", use_container_width=True):
         st.session_state.contador["Loss"] += 1
-        st.session_state.historial_lista.insert(0, {"H": ahora.strftime("%H:%M"), "R": "LOSS ❌"})
         if st.session_state.contador["Loss"] >= 4: st.session_state.bloqueado = True
         st.rerun()
-
-# --- HISTORIAL INFERIOR ---
-if st.session_state.historial_lista:
-    with st.expander("📝 Ver Historial de Operaciones", expanded=False):
-        st.table(st.session_state.historial_lista[:5])
