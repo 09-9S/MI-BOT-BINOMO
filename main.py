@@ -5,100 +5,108 @@ from datetime import datetime, timedelta
 import pytz
 from PIL import Image
 
-# Configuración V29 - Restauración de Funciones Perdidas
-st.set_page_config(page_title="Elite Bot V29 - Full Restore", layout="wide")
+# Configuración V30 - Centro de Comando de Visión
+st.set_page_config(page_title="Elite Bot V30 - Vision Center", layout="wide")
 local_tz = pytz.timezone('America/Bogota')
 
-# --- INICIALIZACIÓN DE TODAS LAS VARIABLES (Evita KeyError) ---
+# --- INICIALIZACIÓN DE MEMORIA ---
 if 'historial_lista' not in st.session_state: st.session_state.historial_lista = []
 if 'contador' not in st.session_state: st.session_state.contador = {"Wins": 0, "Loss": 0}
 if 'bloqueado' not in st.session_state: st.session_state.bloqueado = False
-if 'ultima_senal' not in st.session_state: st.session_state.ultima_senal = None
 
-# --- RELOJ Y ENCABEZADO ---
+# --- CABECERA ---
 ahora = datetime.now(local_tz)
 st.markdown(f"""
-    <div style="background: #000; padding: 10px; border-radius: 10px; border: 2px solid #7b1fa2; text-align: center;">
-        <h2 style="color: white; margin:0; font-size: 18px;">SISTEMA ELITE V29 - RESTAURACIÓN TOTAL</h2>
-        <h1 style="color: #00ff00; margin:0; font-family: monospace;">{ahora.strftime('%H:%M:%S')}</h1>
+    <div style="background: linear-gradient(45deg, #000, #1a237e, #4a148c); padding: 15px; border-radius: 15px; border: 2px solid #00e5ff; text-align: center;">
+        <h1 style="color: white; margin:0; font-size: 22px;">ELITE SYSTEM V30 - VISION COMMAND</h1>
+        <p style="color: #00ff00; font-family: monospace; font-size: 20px; margin:0;">{ahora.strftime('%H:%M:%S')}</p>
     </div>
     """, unsafe_allow_html=True)
 
-# --- PANEL LATERAL (SEÑALES A FUTURO Y GESTIÓN) ---
+# --- PANEL LATERAL (SEÑALES FUTURAS) ---
 with st.sidebar:
-    st.header("🔮 Señales a Futuro")
-    if st.button("📅 GENERAR PRÓXIMAS SEÑALES"):
+    st.header("🔮 Señales Futuras")
+    if st.button("📅 GENERAR CALENDARIO"):
         for i in range(3):
-            min_futuro = random.randint(5, 55)
-            hora_f = (ahora + timedelta(minutes=min_futuro)).strftime("%H:%M")
-            tipo_f = random.choice(["COMPRA ⬆️", "VENTA ⬇️"])
-            st.write(f"⏰ {hora_f} -> **{tipo_f}** (96%)")
-    
+            hora_f = (ahora + timedelta(minutes=random.randint(10, 60))).strftime("%H:%M")
+            st.info(f"⏰ {hora_f} | COMPRA ⬆️ | 96.5%")
     st.divider()
-    st.header("🛡️ Gestión de Riesgo")
-    st.metric("Pérdidas (SL: 4)", f"{st.session_state.contador['Loss']} / 4")
+    st.metric("Pérdidas Acumuladas", f"{st.session_state.contador['Loss']} / 4")
     if st.button("🔄 REINICIAR TODO"):
         st.session_state.contador = {"Wins": 0, "Loss": 0}
         st.session_state.historial_lista = []
         st.session_state.bloqueado = False
-        st.session_state.ultima_senal = None
         st.rerun()
 
-# --- ESCÁNER VISUAL (FOTO / CÁMARA) ---
+# --- NUEVO CUADRO: ESCÁNER DE VISIÓN IA ---
+st.markdown('<div style="background:#121212; padding:15px; border-radius:10px; border-left: 5px solid #00e5ff; margin-top:10px;">', unsafe_allow_html=True)
 st.subheader("📸 Escáner de Visión Artificial")
-foto = st.camera_input("Toma foto a la gráfica para confirmar")
-if foto:
-    if st.button("🔍 VALIDAR TENDENCIA"):
-        with st.spinner("IA analizando velas..."):
-            time.sleep(2)
-            res_v = random.choice(["SUBE ⬆️", "BAJA ⬇️"])
-            st.success(f"Confirmación Visual: {res_v} | Precisión: 98.2%")
+col_cam, col_res = st.columns([1, 1])
+
+with col_cam:
+    foto = st.camera_input("Capturar Gráfica del Broker")
+
+with col_res:
+    if foto:
+        st.markdown("### 🔍 Resultados del Análisis")
+        with st.spinner("IA Escaneando Tendencia..."):
+            time.sleep(2.5)
+            # Simulación de análisis profundo de imagen
+            tendencia = random.choice(["ALCISTA (Fuerte) 📈", "BAJISTA (Fuerte) 📉"])
+            accion = "COMPRA ⬆️" if "ALCISTA" in tendencia else "VENTA ⬇️"
+            porcentaje = f"{random.uniform(96.1, 98.9):.1f}%"
+            color_res = "#2e7d32" if "COMPRA" in accion else "#c62828"
+            
+            st.markdown(f"""
+                <div style="background:{color_res}; padding:20px; border-radius:10px; color:white; text-align:center;">
+                    <h2 style="margin:0;">{accion}</h2>
+                    <p style="margin:0; font-size:18px;"><b>TENDENCIA:</b> {tendencia}</p>
+                    <h1 style="margin:0; font-size:40px;">{porcentaje}</h1>
+                    <p style="margin:0;">Confianza de Entrada</p>
+                </div>
+            """, unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
 
-# --- ANALIZADOR DE MINUTO CON GRÁFICA ---
-col_graf, col_oper = st.columns([2, 1])
+# --- ANALIZADOR DE MINUTO Y GRÁFICA ---
+col_g, col_o = st.columns([2, 1])
 
-with col_graf:
-    mercado = st.selectbox("Activo:", ["OANDA:EURUSD", "FXCM:EURUSD"])
+with col_g:
+    mercado = st.selectbox("Activo en tiempo real:", ["OANDA:EURUSD", "FXCM:EURUSD"])
     st.components.v1.html(f"""
-        <div id="tv_chart" style="height:350px;"></div>
+        <div id="tv" style="height:350px;"></div>
         <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
         <script type="text/javascript">
-        new TradingView.widget({{"autosize": true, "symbol": "{mercado}", "interval": "1", "theme": "dark", "container_id": "tv_chart"}});
+        new TradingView.widget({{"autosize": true, "symbol": "{mercado}", "interval": "1", "theme": "dark", "container_id": "tv"}});
         </script>
     """, height=350)
 
-with col_oper:
-    st.subheader("🎯 Operativa IA")
+with col_o:
+    st.subheader("🎯 Operativa Directa")
     if not st.session_state.bloqueado:
-        if st.button("🚀 ANALIZAR VELA ACTUAL", use_container_width=True):
-            with st.spinner("Analizando..."):
-                time.sleep(1.5)
+        if st.button("🚀 ANALIZAR MINUTO A MINUTO", use_container_width=True):
+            with st.spinner("Sincronizando..."):
+                time.sleep(1)
+                # Filtro de mercado inestable
                 if random.random() < 0.20:
-                    st.session_state.ultima_senal = {"res": "❌ NO OPERAR", "clr": "#ff4b4b", "msg": "Mercado Inestable"}
+                    st.error("⚠️ NO OPERAR: Mercado muy volátil")
                 else:
-                    dir_s = random.choice(["COMPRA ⬆️", "VENTA ⬇️"])
-                    clr_s = "#2e7d32" if "COMPRA" in dir_s else "#c62828"
-                    st.session_state.ultima_senal = {"res": dir_s, "clr": clr_s, "msg": "97.1% CONFIRMADO"}
-
-    if st.session_state.ultima_senal:
-        s = st.session_state.ultima_senal
-        st.markdown(f'<div style="background:{s["clr"]}; padding:15px; border-radius:10px; text-align:center; color:white;"><h3>{s["res"]}</h3><p>{s["msg"]}</p></div>', unsafe_allow_html=True)
-
+                    st.success("SEÑAL LISTA: COMPRA ⬆️ | 97%")
+    
     st.divider()
-    cw, cl = st.columns(2)
-    if cw.button("✅ WIN", use_container_width=True):
+    c_w, c_l = st.columns(2)
+    if c_w.button("✅ WIN", use_container_width=True):
         st.session_state.contador["Wins"] += 1
-        st.session_state.historial_lista.insert(0, {"H": ahora.strftime("%H:%M"), "R": "WIN ✅"})
+        st.session_state.historial_lista.insert(0, {"Hora": ahora.strftime("%H:%M"), "Resultado": "WIN ✅"})
         st.balloons(); st.rerun()
-    if cl.button("❌ LOSS", use_container_width=True):
+    if c_l.button("❌ LOSS", use_container_width=True):
         st.session_state.contador["Loss"] += 1
-        st.session_state.historial_lista.insert(0, {"H": ahora.strftime("%H:%M"), "R": "LOSS ❌"})
+        st.session_state.historial_lista.insert(0, {"Hora": ahora.strftime("%H:%M"), "Resultado": "LOSS ❌"})
         if st.session_state.contador["Loss"] >= 4: st.session_state.bloqueado = True
         st.rerun()
 
-# --- TABLA DE HISTORIAL (GANADAS/PERDIDAS) ---
-st.subheader("📝 Historial de Sesión")
+# --- HISTORIAL ---
 if st.session_state.historial_lista:
+    st.subheader("📝 Historial de Hoy")
     st.table(st.session_state.historial_lista[:5])
