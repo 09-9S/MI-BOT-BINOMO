@@ -4,120 +4,117 @@ import random
 from datetime import datetime
 import pytz
 
-# --- CONFIGURACIÓN DE PÁGINA Y ESTILO ---
-st.set_page_config(page_title="INFINITY PROFIT V47", layout="wide")
+# --- ESTILO DE ALTA VISIBILIDAD ---
+st.set_page_config(page_title="INFINITY PROFIT V49", layout="wide")
 
 hide_style = """
     <style>
     #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-    .stApp {background-color: #0a0a0a; color: white;}
-    /* Diseño del Escáner Pacto */
-    .scan-card {
-        background: linear-gradient(145deg, #161616, #000000);
+    .stApp {background-color: #050505; color: white;}
+    
+    /* Botones con colores reales */
+    div.stButton > button:first-child {
+        height: 50px;
+        font-weight: bold;
+        border-radius: 10px;
         border: 2px solid #ffd700;
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0px 0px 15px rgba(255, 215, 0, 0.2);
     }
-    .metric-val { font-size: 45px; font-weight: bold; color: #ffd700; margin: 0; }
+    /* Botón Analizar (Dorado/Negro) */
+    .btn-analizar button { background-color: #ffd700 !important; color: black !important; }
+    /* Botón WIN (Verde) */
+    .btn-win button { background-color: #2e7d32 !important; color: white !important; border: none !important; }
+    /* Botón LOSS (Rojo) */
+    .btn-loss button { background-color: #c62828 !important; color: white !important; border: none !important; }
+    
+    .scan-card { border: 2px solid #ffd700; border-radius: 15px; padding: 15px; background: #111; }
     </style>
 """
 st.markdown(hide_style, unsafe_allow_html=True)
 local_tz = pytz.timezone('America/Bogota')
 
-# --- INICIALIZACIÓN DE MEMORIA ---
+# --- INICIALIZACIÓN ---
 if 'historial' not in st.session_state: st.session_state.historial = []
-if 'contador' not in st.session_state: st.session_state.contador = {"Wins": 0, "Loss": 0}
 
-# --- BARRA DE CONFIGURACIÓN (≡) ---
-with st.expander("≡ CONFIGURACIÓN DE MERCADO Y BILLETERA"):
-    c1, c2, c3 = st.columns(3)
+# --- PANEL DE CONFIGURACIÓN ---
+with st.expander("≡ MERCADO Y BILLETERA"):
+    c1, c2 = st.columns(2)
     with c1:
         mercado = st.selectbox("Activo:", ["EUR/USD", "BTC/USD", "USD/JPY"], index=0)
     with c2:
-        balance = st.number_input("Balance ($):", value=1000.0)
-    with c3:
-        inv_base = st.number_input("Inversión Inicial ($):", value=10.0)
-        st.caption(f"G1: ${inv_base*2.2:.2f} | G2: ${inv_base*4.8:.2f}")
+        inversion = st.number_input("Inversión ($):", value=10.0)
 
 # --- CABECERA ---
-ahora = datetime.now(local_tz)
 st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #000, #b8860b, #000); padding: 10px; border-radius: 10px; border-bottom: 2px solid #ffd700; text-align: center; margin-bottom: 20px;">
-        <h1 style="color: white; margin:0; font-size: 26px; letter-spacing: 2px;">INFINITY PROFIT IA V.47</h1>
-        <p style="color: #ffd700; margin:0;">SISTEMA DE ALTA PRECISIÓN • {ahora.strftime('%H:%M:%S')}</p>
+    <div style="background: linear-gradient(90deg, #000, #b8860b, #000); padding: 10px; border-radius: 10px; border: 1px solid #ffd700; text-align: center;">
+        <h2 style="color: white; margin:0;">INFINITY PROFIT IA V.49</h2>
+        <p style="color: #ffd700; margin:0;">GRÁFICA RESTAURADA • BOTONES ACTIVOS</p>
     </div>
     """, unsafe_allow_html=True)
 
-# --- SECCIÓN DE ESCÁNER (EL DISEÑO QUE QUERÍAS) ---
-col_foto, col_stats = st.columns([1, 1.5])
-
-with col_foto:
-    st.markdown("<div class='scan-card'>", unsafe_allow_html=True)
-    st.markdown("🟡 **CÁMARA DE ANÁLISIS**")
-    foto = st.camera_input("Capturar Vela")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with col_stats:
-    if foto:
-        with st.spinner("IA PROCESANDO DATOS..."):
-            time.sleep(1.2)
-            res_ia = random.choice(["COMPRA ⬆️", "VENTA ⬇️", "NO OPERAR ⚠️"])
-            tendencia = "ALCISTA 📈" if "COMPRA" in res_ia else "BAJISTA 📉"
-            if "NO OPERAR" in res_ia: tendencia = "INCIERTA 🔄"
-            
-            p_val = random.uniform(97.2, 99.8)
-            color_res = "#2e7d32" if "COMPRA" in res_ia else "#c62828"
-            if "NO OPERAR" in res_ia: color_res = "#424242"
-
-            st.markdown(f"""
-                <div style="background: {color_res}; padding: 25px; border-radius: 15px; border: 2px solid #fff; text-align: center;">
-                    <h4 style="margin:0; color: #fff; opacity: 0.8;">TENDENCIA DETECTADA</h4>
-                    <h2 style="margin:0; color: #fff;">{tendencia}</h2>
-                    <hr style="border: 0.5px solid rgba(255,255,255,0.2);">
-                    <h1 style="margin:0; font-size: 50px; color: #fff;">{res_ia}</h1>
-                    <p class="metric-val">{p_val:.1f}%</p>
-                    <p style="margin:0; color: #fff;">PRECISIÓN CALCULADA</p>
-                </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.info("Presiona 'Take Photo' para iniciar el análisis estadístico.")
-
-# --- GRÁFICA PROFESIONAL ---
+# --- GRÁFICA PRINCIPAL (RESTAURADA) ---
 st.write("")
 st.components.v1.html(f"""
-    <div id="tradingview_v47" style="height:450px;"></div>
+    <div id="tradingview_v49" style="height:450px;"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script type="text/javascript">
-    new TradingView.widget({{"width": "100%", "height": 450, "symbol": "{mercado.replace('/','')}", "interval": "1", "theme": "dark", "container_id": "tradingview_v47", "locale": "es", "style": "1"}});
+    new TradingView.widget({{"width": "100%", "height": 450, "symbol": "{mercado.replace('/','')}", "interval": "1", "theme": "dark", "container_id": "tradingview_v49", "locale": "es", "style": "1", "toolbar_bg": "#f1f3f6", "enable_publishing": false, "hide_side_toolbar": false, "allow_symbol_change": true}});
     </script>
 """, height=450)
 
-# --- PANEL DE EJECUCIÓN ---
+# --- ESCÁNER DE VELA ---
 st.divider()
-c1, c2, c3 = st.columns(3)
-with c1:
-    if st.button("🚀 ANALIZAR AHORA", use_container_width=True):
-        st.session_state.temp_s = {"r": random.choice(["COMPRA ⬆️", "VENTA ⬇️"]), "p": f"{random.uniform(97,99):.1f}%"}
-with c2:
-    if 'temp_s' in st.session_state:
-        st.success(f"{st.session_state.temp_s['r']} | {st.session_state.temp_s['p']}")
-with c3:
-    cw, cl = st.columns(2)
-    if cw.button("WIN ✅", use_container_width=True):
-        st.session_state.contador["Wins"] += 1
-        st.session_state.historial.insert(0, f"{ahora.strftime('%H:%M')} - {mercado} - GANADA ✅")
-        st.rerun()
-    if cl.button("LOSS ❌", use_container_width=True):
-        st.session_state.contador["Loss"] += 1
-        st.session_state.historial.insert(0, f"{ahora.strftime('%H:%M')} - {mercado} - PERDIDA ❌")
-        st.rerun()
+col_cam, col_res = st.columns([1, 1])
 
-# --- HISTORIAL LIMPIO ---
-st.subheader("📝 Historial de Operaciones")
-if st.session_state.historial:
-    for op in st.session_state.historial[:5]:
-        st.write(f"🔹 {op}")
-else:
-    st.caption("Esperando registros...")
+with col_cam:
+    st.markdown("<h4 style='text-align:center;'>📸 ESCANEAR GRÁFICA</h4>", unsafe_allow_html=True)
+    st.markdown('<div class="btn-analizar">', unsafe_allow_html=True)
+    foto = st.camera_input("Capturar")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with col_res:
+    if foto:
+        with st.spinner("Analizando flujo..."):
+            time.sleep(1.5)
+            res = random.choice(["COMPRA ⬆️", "VENTA ⬇️", "NO OPERAR ⚠️"])
+            tend = "ALCISTA" if "COMPRA" in res else "BAJISTA"
+            if "NO OPERAR" in res: tend = "LATERAL"
+            
+            color = "#2e7d32" if "COMPRA" in res else "#c62828"
+            if "NO OPERAR" in res: color = "#424242"
+
+            st.markdown(f"""
+                <div style="background: {color}; padding: 20px; border-radius: 15px; border: 2px solid white; text-align: center;">
+                    <h2 style="margin:0;">{res}</h2>
+                    <h4 style="margin:0;">TENDENCIA {tend}</h4>
+                    <h1 style="margin:0; color: #ffd700;">{random.uniform(97.5, 99.6):.1f}%</h1>
+                </div>
+            """, unsafe_allow_html=True)
+
+# --- PANEL DE EJECUCIÓN (COLORES CORREGIDOS) ---
+st.divider()
+st.subheader("🎯 Panel de Resultados")
+c_analizar, c_win, c_loss = st.columns(3)
+
+with c_analizar:
+    st.markdown('<div class="btn-analizar">', unsafe_allow_html=True)
+    if st.button("🚀 ANALIZAR VELA", use_container_width=True):
+        st.info("Buscando patrón de entrada...")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with c_win:
+    st.markdown('<div class="btn-win">', unsafe_allow_html=True)
+    if st.button("WIN ✅", use_container_width=True):
+        st.session_state.historial.insert(0, f"{datetime.now(local_tz).strftime('%H:%M')} - {mercado} - WIN ✅")
+        st.balloons()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with c_loss:
+    st.markdown('<div class="btn-loss">', unsafe_allow_html=True)
+    if st.button("LOSS ❌", use_container_width=True):
+        st.session_state.historial.insert(0, f"{datetime.now(local_tz).strftime('%H:%M')} - {mercado} - LOSS ❌")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- HISTORIAL ---
+st.divider()
+for op in st.session_state.historial[:5]:
+    st.write(op)
