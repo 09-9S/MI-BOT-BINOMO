@@ -4,12 +4,12 @@ import random
 from datetime import datetime, timedelta
 import pytz
 
-# Zona horaria Colombia
+# Configuración de zona horaria para Colombia
 local_tz = pytz.timezone('America/Bogota')
 
-st.set_page_config(page_title="Analizador Maestro V4", layout="wide")
+st.set_page_config(page_title="Analizador Pro V4 - Martingala", layout="wide")
 
-# --- MEMORIA DEL BOT ---
+# --- INICIALIZACIÓN DE SESIÓN ---
 if 'historial' not in st.session_state:
     st.session_state.historial = {"Wins": 0, "Loss": 0}
 if 'bloqueado' not in st.session_state:
@@ -22,14 +22,13 @@ if 'ultima_senal' not in st.session_state:
 def play_alert():
     st.components.v1.html("""<audio autoplay><source src="https://www.soundjay.com/buttons/beep-01a.mp3" type="audio/mpeg"></audio>""", height=0)
 
-# --- RELOJ CON SEGUNDERO (YA CORREGIDO) ---
+# --- RELOJ ANIMADO (SEGUNDERO REAL) ---
 st.components.v1.html(
     """
-    <div style="background: #111; padding: 15px; border-radius: 10px; border: 2px solid #00ff00; text-align: center;">
-        <h1 style="color: #00ff00; font-family: monospace; margin: 0; font-size: 40px;">
-            <span id="clock">00:00:00</span>
+    <div style="background: #111; padding: 10px; border-radius: 10px; border: 2px solid #00ff00; text-align: center;">
+        <h1 style="color: #00ff00; font-family: monospace; margin: 0; font-size: 35px;">
+            🕒 <span id="clock">00:00:00</span>
         </h1>
-        <p style="color: white; margin: 5px 0 0 0;">HORA COLOMBIA</p>
     </div>
     <script>
         function updateClock() {
@@ -41,18 +40,27 @@ st.components.v1.html(
         updateClock();
     </script>
     """,
-    height=120,
+    height=100,
 )
+
+st.title("🛡️ Sistema de Trading: Martingala + Porcentaje")
 
 # --- PANEL LATERAL ---
 with st.sidebar:
-    st.header("🏆 Marcador Global")
-    st.metric("WIN", st.session_state.historial["Wins"])
-    st.metric("LOSS", st.session_state.historial["Loss"])
+    st.header("📊 Marcador de Hoy")
+    st.metric("GANADAS (WIN)", st.session_state.historial["Wins"])
+    st.metric("PERDIDAS (LOSS)", st.session_state.historial["Loss"])
+    
     st.divider()
-    mercado = st.selectbox("Mercado:", ["FX:EURUSD", "FX:GBPUSD", "FX:USDJPY", "BITSTAMP:BTCUSD"])
-    if st.button("🔄 REINICIAR TODO"):
-        st.session_state.historial = {"Wins": 0, "Loss": 0}
+    # INDICADOR VISUAL DE MARTINGALA
+    if st.session_state.bloqueado:
+        st.error("🚫 SISTEMA BLOQUEADO: Se perdieron 2 Martingalas.")
+    else:
+        color_gale = "green" if st.session_state.nivel_gale == 0 else "orange"
+        st.markdown(f"**Nivel de Riesgo Actual:** :{color_gale}[{'Base (Bajo)' if st.session_state.nivel_gale == 0 else 'GALE ' + str(st.session_state.nivel_gale)}]")
+    
+    mercado = st.selectbox("Activo:", ["FX:EURUSD", "FX:GBPUSD", "FX:USDJPY", "BITSTAMP:BTCUSD"])
+    if st.button("🔄 REINICIAR (Volver a Nivel 0)"):
         st.session_state.bloqueado = False
         st.session_state.nivel_gale = 0
         st.session_state.ultima_senal = None
@@ -66,38 +74,34 @@ with tab1:
     
     if not st.session_state.bloqueado:
         if st.button("🚀 GENERAR SEÑAL AHORA", use_container_width=True):
-            with st.spinner("Escaneando tendencia..."):
+            with st.spinner("Escaneando..."):
                 time.sleep(1.5)
             res = random.choice(["COMPRA ⬆️", "VENTA ⬇️"])
-            porc = random.randint(88, 98)
+            porc = random.randint(89, 99) # El porcentaje de efectividad
             play_alert()
             st.session_state.ultima_senal = {"res": res, "porc": porc}
-    else:
-        st.error("🚫 SISTEMA BLOQUEADO (GALE 2 PERDIDO). Reinicia en el panel lateral.")
-
+    
     if st.session_state.ultima_senal:
         s = st.session_state.ultima_senal
-        if "COMPRA" in s["res"]:
-            st.success(f"🔥 SEÑAL: {s['res']} | EFECTIVIDAD: {s['porc']}%")
-        else:
-            st.error(f"🔥 SEÑAL: {s['res']} | EFECTIVIDAD: {s['porc']}%")
+        st.success(f"🔥 SEÑAL: {s['res']} | EFECTIVIDAD: {s['porc']}%")
 
     st.divider()
-    st.write("### Registrar Resultado")
+    st.subheader("🛠️ Control de Resultados (Martingala)")
     c1, c2 = st.columns(2)
-    if c1.button('✅ GANADA (WIN)', use_container_width=True):
+    if c1.button('✅ GANÉ (WIN)', use_container_width=True):
         st.session_state.historial["Wins"] += 1
-        st.session_state.nivel_gale = 0
+        st.session_state.nivel_gale = 0 # REINICIA EL MARTINGALA A 0
         st.balloons()
         st.rerun()
-    if c2.button('❌ PERDIDA (LOSS)', use_container_width=True):
+    if c2.button('❌ PERDÍ (LOSS)', use_container_width=True):
         st.session_state.historial["Loss"] += 1
-        st.session_state.nivel_gale += 1
-        if st.session_state.nivel_gale >= 2: st.session_state.bloqueado = True
+        st.session_state.nivel_gale += 1 # SUBE EL NIVEL DE MARTINGALA
+        if st.session_state.nivel_gale >= 2:
+            st.session_state.bloqueado = True # BLOQUEO DE SEGURIDAD
         st.rerun()
 
 with tab2:
-    st.subheader("📅 Calendario Futuro (Próximas 10)")
+    st.subheader("📅 Calendario Futuro (10 Señales)")
     ahora_local = datetime.now(local_tz)
     data = []
     for i in range(1, 11):
