@@ -9,7 +9,7 @@ local_tz = pytz.timezone('America/Bogota')
 
 # --- 2. SISTEMA DE BLOQUEO (CONTRASEÑA) ---
 # Cambia esto cada mes para que tus clientes tengan que pagarte de nuevo.
-PASSWORD_DEL_MES = "INFINITY2026" 
+PASSWORD_DEL_MES = "KSTM9780" 
 
 if "autenticado" not in st.session_state:
     st.session_state.autenticado = False
